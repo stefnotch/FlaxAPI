@@ -19,7 +19,7 @@ namespace FlaxEditor.SceneGraph.GUI
     public class ActorTreeNode : TreeNode
     {
         private int _orderInParent;
-        private DragXYZ _dragXYZ = new DragXYZ();
+        private readonly DragXYZ _dragXYZ = new DragXYZ();
         //private DragActors _dragActors;
         //private DragAssets _dragAssets;
         //private DragActorType _dragActorType;

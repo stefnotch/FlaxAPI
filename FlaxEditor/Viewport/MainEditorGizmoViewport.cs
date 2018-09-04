@@ -34,7 +34,10 @@ namespace FlaxEditor.Viewport
 
         //private readonly DragAssets _dragAssets = new DragAssets();
         //private readonly DragActorType _dragActorType = new DragActorType();
-        private readonly DragXYZ _dragXYZ = new DragXYZ();
+        /// <summary>
+        /// 
+        /// </summary>
+        public readonly DragXYZ DragXYZ = new DragXYZ();
         private readonly ViewportDebugDrawData _debugDrawData = new ViewportDebugDrawData(32);
 
         private ModelActor _previewModelActor;
@@ -216,8 +219,8 @@ namespace FlaxEditor.Viewport
             ViewWidgetButtonMenu.AddSeparator();
             ViewWidgetButtonMenu.AddButton("Create camera here", CreateCameraAtView);
 
-            _dragXYZ.AddDragHelper<AssetItem>(new DragAssets());
-            _dragXYZ.AddDragHelper<Type>(new DragActorType());
+            DragXYZ.AddDragHelper<AssetItem>(new DragAssets());
+            DragXYZ.AddDragHelper<Type>(new DragActorType());
 
         }
 
@@ -618,7 +621,7 @@ namespace FlaxEditor.Viewport
 
         private void SetDragEffects(ref Vector2 location)
         {
-            var dragAssetsHelper = _dragXYZ.HasValidDrag<AssetItem>();
+            var dragAssetsHelper = DragXYZ.HasValidDrag<AssetItem>();
             if (dragAssetsHelper != null && dragAssetsHelper.Objects[0].ItemDomain == ContentDomain.Material)
             {
                 Vector3 hitLocation = ViewPosition;
@@ -648,8 +651,8 @@ namespace FlaxEditor.Viewport
             if (result != DragDropEffect.None)
                 return result;
 
-            var dragEffect = _dragXYZ.OnDragEnter<AssetItem>(data, ValidateDragItem)?.Effect ??
-                             _dragXYZ.OnDragEnter<Type>(data, ValidateDragActorType)?.Effect;
+            var dragEffect = DragXYZ.OnDragEnter<AssetItem>(data, ValidateDragItem)?.Effect ??
+                             DragXYZ.OnDragEnter<Type>(data, ValidateDragActorType)?.Effect;
             if (dragEffect.HasValue)
                 result = dragEffect.Value;
 
@@ -687,7 +690,7 @@ namespace FlaxEditor.Viewport
 
             SetDragEffects(ref location);
 
-            return _dragXYZ.HasValidDrag()?.Effect ?? DragDropEffect.None;
+            return DragXYZ.HasValidDrag()?.Effect ?? DragDropEffect.None;
         }
 
         /// <inheritdoc />
@@ -695,7 +698,7 @@ namespace FlaxEditor.Viewport
         {
             ClearDragEffects();
 
-            _dragXYZ.OnDragLeave();
+            DragXYZ.OnDragLeave();
 
             base.OnDragLeave();
         }
@@ -821,7 +824,7 @@ namespace FlaxEditor.Viewport
             Vector3 hitLocation = ViewPosition;
             SceneGraphNode hit = null;
 
-            var dragHelper = _dragXYZ.HasValidDrag();
+            var dragHelper = DragXYZ.HasValidDrag();
             if (dragHelper != null)
             {
                 GetHitLocation(ref location, out hit, out hitLocation);

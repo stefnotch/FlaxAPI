@@ -32,9 +32,10 @@ namespace FlaxEditor.CustomEditors.Editors
             private Vector2 _mousePos;
 
             private bool _hasValidDragOver;
-            private DragActors _dragActors;
-            private DragAssets _dragAssets;
-            private DragScripts _dragScripts;
+            //private DragActors _dragActors;
+            //private DragAssets _dragAssets;
+            //private DragScripts _dragScripts;
+            private readonly DragXYZ _dragXYZ;
 
             /// <summary>
             /// Gets or sets the allowed objects type (given type and all sub classes). Must be <see cref="Object"/> type of any subclass.
@@ -298,33 +299,37 @@ namespace FlaxEditor.CustomEditors.Editors
                 base.OnDragEnter(ref location, data);
 
                 // Ensure to have valid drag helpers (uses lazy init)
-                if (_dragActors == null)
-                    _dragActors = new DragActors();
-                if (_dragAssets == null)
-                    _dragAssets = new DragAssets();
-                if (_dragScripts == null)
-                    _dragScripts = new DragScripts();
+                if (_dragXYZ == null)
+                {
+                    _dragXYZ.AddDragHelper(new DragActors());
+                    _dragXYZ.AddDragHelper(new DragAssets());
+                    _dragXYZ.AddDragHelper(new DragScripts());
+                }
 
                 _hasValidDragOver = false;
-                if (_dragActors.OnDragEnter(data, x => IsValid(x.Actor)))
+                if (_dragXYZ.OnDragEnter<ActorNode>(data, x => IsValid(x.Actor)) != null)
                 {
                     _hasValidDragOver = true;
                 }
-                else if (_dragAssets.OnDragEnter(data, ValidateDragAsset))
+                else if (_dragXYZ.OnDragEnter<AssetItem>(data, ValidateDragAsset) != null)
                 {
                     _hasValidDragOver = true;
                 }
-                else if (_dragScripts.OnDragEnter(data, IsValid))
+                else if (_dragXYZ.OnDragEnter<Script>(data, IsValid) != null)
                 {
                     _hasValidDragOver = true;
                 }
-                else if (_dragActors.OnDragEnter(data, ValidateDragActorWithScript))
+                else
                 {
-                    // Special case when dragging the actor with script to link script reference
-                    var script = _dragActors.Objects[0].Actor.GetScript(_type);
-                    _dragActors.Objects.Clear();
-                    _dragScripts.Objects.Add(script);
-                    _hasValidDragOver = true;
+                    var dragActorsHelper = _dragXYZ.OnDragEnter<ActorNode>(data, ValidateDragActorWithScript);
+                    if (dragActorsHelper != null)
+                    {
+                        // Special case when dragging the actor with script to link script reference
+                        var script = dragActorsHelper.Objects[0].Actor.GetScript(_type);
+                        dragActorsHelper.Objects.Clear();
+                        _dragXYZ.FirstWithType<Script>().Objects.Add(script);
+                        _hasValidDragOver = true;
+                    }
                 }
 
                 return DragEffect;
@@ -363,9 +368,7 @@ namespace FlaxEditor.CustomEditors.Editors
             public override void OnDragLeave()
             {
                 _hasValidDragOver = false;
-                _dragActors.OnDragLeave();
-                _dragAssets.OnDragLeave();
-                _dragScripts.OnDragLeave();
+                _dragXYZ.OnDragLeave();
 
                 base.OnDragLeave();
             }
@@ -377,6 +380,7 @@ namespace FlaxEditor.CustomEditors.Editors
 
                 base.OnDragDrop(ref location, data);
 
+                // _dragXYZ.HasValidDrag().Objects
                 if (_dragActors.HasValidDrag)
                 {
                     Value = _dragActors.Objects[0].Actor;
