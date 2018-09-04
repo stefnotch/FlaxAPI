@@ -7,6 +7,10 @@ using FlaxEngine.GUI;
 
 namespace FlaxEditor.GUI.Drag
 {
+    public delegate void DragEnterEventHandler<T>(DragHelper<T> dragHandler);
+    public delegate void DragLeaveEventHandler<T>(DragHelper<T> dragHandler);
+    public delegate void DragDropEventHandler<T>(DragHelper<T> dragHandler);
+
     /// <summary>
     /// Base class for drag and drop operation helpers.
     /// </summary>
@@ -35,6 +39,21 @@ namespace FlaxEditor.GUI.Drag
         public DragDropEffect Effect => HasValidDrag ? DragDropEffect.Move : DragDropEffect.None;
 
         /// <summary>
+        /// Raised when drag enters.
+        /// </summary>
+        public event DragEnterEventHandler<T> DragEnter;
+
+        /// <summary>
+        /// Raised when drag leaves.
+        /// </summary>
+        public event DragLeaveEventHandler<T> DragLeave;
+
+        /// <summary>
+        /// Raised when drag drops.
+        /// </summary>
+        public event DragDropEventHandler<T> DragDrop;
+
+        /// <summary>
         /// Invalids the drag data.
         /// </summary>
         public void InvalidDrag()
@@ -50,6 +69,7 @@ namespace FlaxEditor.GUI.Drag
         /// <returns>True if drag event is valid and can be performed, otherwise false.</returns>
         public bool OnDragEnter(DragData data, Func<T, bool> validateFunc)
         {
+            DragEnter?.Invoke(this);
             if (data == null || validateFunc == null)
                 throw new ArgumentNullException();
 
@@ -68,6 +88,7 @@ namespace FlaxEditor.GUI.Drag
         /// </summary>
         public void OnDragLeave()
         {
+            DragLeave?.Invoke(this);
             Objects.Clear();
         }
 
@@ -76,6 +97,7 @@ namespace FlaxEditor.GUI.Drag
         /// </summary>
         public void OnDragDrop()
         {
+            DragDrop?.Invoke(this);
             Objects.Clear();
         }
 
