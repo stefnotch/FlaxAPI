@@ -32,8 +32,9 @@ namespace FlaxEditor.Viewport
         private readonly ViewportWidgetButton _rotateSnapping;
         private readonly ViewportWidgetButton _scaleSnapping;
 
-        private readonly DragAssets _dragAssets = new DragAssets();
-        private readonly DragActorType _dragActorType = new DragActorType();
+        //private readonly DragAssets _dragAssets = new DragAssets();
+        //private readonly DragActorType _dragActorType = new DragActorType();
+        private readonly DragXYZ _dragXYZ = new DragXYZ();
         private readonly ViewportDebugDrawData _debugDrawData = new ViewportDebugDrawData(32);
 
         private ModelActor _previewModelActor;
@@ -214,6 +215,10 @@ namespace FlaxEditor.Viewport
             // Create camera widget
             ViewWidgetButtonMenu.AddSeparator();
             ViewWidgetButtonMenu.AddButton("Create camera here", CreateCameraAtView);
+
+            _dragXYZ.AddDragHelper<AssetItem>(new DragAssets());
+            _dragXYZ.AddDragHelper<Type>(new DragActorType());
+
         }
 
         private void CreateCameraAtView()
@@ -613,7 +618,8 @@ namespace FlaxEditor.Viewport
 
         private void SetDragEffects(ref Vector2 location)
         {
-            if (_dragAssets.HasValidDrag && _dragAssets.Objects[0].ItemDomain == ContentDomain.Material)
+            var dragAssetsHelper = _dragXYZ.HasValidDrag<AssetItem>();
+            if (dragAssetsHelper != null && dragAssetsHelper.Objects[0].ItemDomain == ContentDomain.Material)
             {
                 Vector3 hitLocation = ViewPosition;
                 SceneGraphNode hit;
@@ -642,10 +648,10 @@ namespace FlaxEditor.Viewport
             if (result != DragDropEffect.None)
                 return result;
 
-            if (_dragAssets.OnDragEnter(data, ValidateDragItem))
-                result = _dragAssets.Effect;
-            if (_dragActorType.OnDragEnter(data, ValidateDragActorType))
-                result = _dragActorType.Effect;
+            var dragEffect = _dragXYZ.OnDragEnter<AssetItem>(data, ValidateDragItem)?.Effect ??
+                             _dragXYZ.OnDragEnter<Type>(data, ValidateDragActorType)?.Effect;
+            if (dragEffect.HasValue)
+                result = dragEffect.Value;
 
             SetDragEffects(ref location);
 
@@ -681,12 +687,7 @@ namespace FlaxEditor.Viewport
 
             SetDragEffects(ref location);
 
-            if (_dragAssets.HasValidDrag)
-                return _dragAssets.Effect;
-            if (_dragActorType.HasValidDrag)
-                return _dragActorType.Effect;
-
-            return DragDropEffect.None;
+            return _dragXYZ.HasValidDrag()?.Effect ?? DragDropEffect.None;
         }
 
         /// <inheritdoc />
@@ -694,8 +695,7 @@ namespace FlaxEditor.Viewport
         {
             ClearDragEffects();
 
-            _dragAssets.OnDragLeave();
-            _dragActorType.OnDragLeave();
+            _dragXYZ.OnDragLeave();
 
             base.OnDragLeave();
         }
@@ -820,32 +820,35 @@ namespace FlaxEditor.Viewport
             // Check if drag sth
             Vector3 hitLocation = ViewPosition;
             SceneGraphNode hit = null;
-            if (_dragAssets.HasValidDrag || _dragActorType.HasValidDrag)
+
+            var dragHelper = _dragXYZ.HasValidDrag();
+            if (dragHelper != null)
             {
                 GetHitLocation(ref location, out hit, out hitLocation);
+
+                dragHelper.OnDragDrop();
+                result = dragHelper.Effect;
             }
 
+            var dragAssetsHelper = dragHelper.ToType<AssetItem>();
+            var dragActorHelper = dragHelper.ToType<Type>();
             // Drag assets
-            if (_dragAssets.HasValidDrag)
+            if (dragAssetsHelper != null)
             {
-                result = _dragAssets.Effect;
-
                 // Process items
-                for (int i = 0; i < _dragAssets.Objects.Count; i++)
+                for (int i = 0; i < dragAssetsHelper.Objects.Count; i++)
                 {
-                    var item = _dragAssets.Objects[i];
+                    var item = dragAssetsHelper.Objects[i];
                     Spawn(item, hit, ref hitLocation);
                 }
             }
             // Drag actor type
-            else if (_dragActorType.HasValidDrag)
+            else if (dragActorHelper != null)
             {
-                result = _dragActorType.Effect;
-
                 // Process items
-                for (int i = 0; i < _dragActorType.Objects.Count; i++)
+                for (int i = 0; i < dragActorHelper.Objects.Count; i++)
                 {
-                    var item = _dragActorType.Objects[i];
+                    var item = dragActorHelper.Objects[i];
                     Spawn(item, hit, ref hitLocation);
                 }
             }

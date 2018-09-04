@@ -195,6 +195,7 @@
     <Compile Include="GUI\Drag\DragScriptItems.cs" />
     <Compile Include="GUI\Drag\DragScripts.cs" />
     <Compile Include="GUI\Drag\DragSurfaceParameter.cs" />
+    <Compile Include="GUI\Drag\DragXYZ.cs" />
     <Compile Include="GUI\Input\ColorValueBox.cs" />
     <Compile Include="GUI\Input\DoubleValueBox.cs" />
     <Compile Include="GUI\Input\FloatValueBox.cs" />

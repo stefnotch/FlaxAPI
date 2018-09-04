@@ -19,9 +19,10 @@ namespace FlaxEditor.SceneGraph.GUI
     public class ActorTreeNode : TreeNode
     {
         private int _orderInParent;
-        private DragActors _dragActors;
-        private DragAssets _dragAssets;
-        private DragActorType _dragActorType;
+        private DragXYZ _dragXYZ = new DragXYZ();
+        //private DragActors _dragActors;
+        //private DragAssets _dragAssets;
+        //private DragActorType _dragActorType;
 
         /// <summary>
         /// The actor node that owns this node.
@@ -226,46 +227,36 @@ namespace FlaxEditor.SceneGraph.GUI
                     return DragDropEffect.None;
             }
 
+            if (_dragXYZ == null)
+            {
+                _dragXYZ = new DragXYZ();
+                _dragXYZ.AddDragHelper(new DragActors());
+                _dragXYZ.AddDragHelper(new DragAssets());
+                _dragXYZ.AddDragHelper(new DragActorType());
+            }
+
             // Check if drop actors
-            if (_dragActors == null)
-                _dragActors = new DragActors();
-            if (_dragActors.OnDragEnter(data, ValidateDragActor))
-                return _dragActors.Effect;
+            var actorNodeEffect = _dragXYZ.OnDragEnter<ActorNode>(data, ValidateDragActor)?.Effect;
 
             // Check if drag assets
-            if (_dragAssets == null)
-                _dragAssets = new DragAssets();
-            if (_dragAssets.OnDragEnter(data, ValidateDragAsset))
-                return _dragAssets.Effect;
+            var assetEffect = _dragXYZ.OnDragEnter<AssetItem>(data, ValidateDragAsset)?.Effect;
 
             // Check if drag actor type
-            if (_dragActorType == null)
-                _dragActorType = new DragActorType();
-            if (_dragActorType.OnDragEnter(data, ValidateDragActorType))
-                return _dragActorType.Effect;
+            var actorTypeEffect = _dragXYZ.OnDragEnter<Type>(data, ValidateDragActorType)?.Effect;
 
-            return DragDropEffect.None;
+            return actorNodeEffect ?? assetEffect ?? actorTypeEffect ?? DragDropEffect.None;
         }
 
         /// <inheritdoc />
         protected override DragDropEffect OnDragMoveHeader(DragData data)
         {
-            if (_dragActors != null && _dragActors.HasValidDrag)
-                return _dragActors.Effect;
-            if (_dragAssets != null && _dragAssets.HasValidDrag)
-                return _dragAssets.Effect;
-            if (_dragActorType != null && _dragActorType.HasValidDrag)
-                return _dragActorType.Effect;
-
-            return DragDropEffect.None;
+            return _dragXYZ.HasValidDrag()?.Effect ?? DragDropEffect.None;
         }
 
         /// <inheritdoc />
         protected override void OnDragLeaveHeader()
         {
-            _dragActors?.OnDragLeave();
-            _dragAssets?.OnDragLeave();
-            _dragActorType?.OnDragLeave();
+            _dragXYZ?.OnDragLeave();
         }
 
         private class ReparentAction : IUndoAction
@@ -415,14 +406,18 @@ namespace FlaxEditor.SceneGraph.GUI
             if (newParent == null)
                 throw new InvalidOperationException("Missing parent actor.");
 
+            var actorNodeDragHelper = _dragXYZ.HasValidDrag<ActorNode>();
+            var assetDragHelper = _dragXYZ.HasValidDrag<AssetItem>();
+            var actorTypeDragHelper = _dragXYZ.HasValidDrag<Type>();
+
             // Drag actors
-            if (_dragActors != null && _dragActors.HasValidDrag)
+            if (actorNodeDragHelper != null)
             {
                 bool worldPositionLock = Root.GetKey(Keys.Control) == false;
-                var singleObject = _dragActors.Objects.Count == 1;
+                var singleObject = actorNodeDragHelper.Objects.Count == 1;
                 if (singleObject)
                 {
-                    var targetActor = _dragActors.Objects[0].Actor;
+                    var targetActor = actorNodeDragHelper.Objects[0].Actor;
                     var customAction = targetActor.HasPrefabLink ? new ReparentAction(targetActor) : null;
                     using (new UndoBlock(ActorNode.Root.Undo, targetActor, "Change actor parent", customAction))
                     {
@@ -432,7 +427,7 @@ namespace FlaxEditor.SceneGraph.GUI
                 }
                 else
                 {
-                    var targetActors = _dragActors.Objects.ConvertAll(x => x.Actor);
+                    var targetActors = actorNodeDragHelper.Objects.ConvertAll(x => x.Actor);
                     var customAction = targetActors.Any(x => x.HasPrefabLink) ? new ReparentAction(targetActors) : null;
                     using (new UndoMultiBlock(ActorNode.Root.Undo, targetActors, "Change actors parent", customAction))
                     {
@@ -448,11 +443,11 @@ namespace FlaxEditor.SceneGraph.GUI
                 result = DragDropEffect.Move;
             }
             // Drag assets
-            else if (_dragAssets != null && _dragAssets.HasValidDrag)
+            else if (assetDragHelper != null)
             {
-                for (int i = 0; i < _dragAssets.Objects.Count; i++)
+                for (int i = 0; i < assetDragHelper.Objects.Count; i++)
                 {
-                    var item = _dragAssets.Objects[i];
+                    var item = assetDragHelper.Objects[i];
 
                     switch (item.ItemDomain)
                     {
@@ -538,11 +533,11 @@ namespace FlaxEditor.SceneGraph.GUI
                 result = DragDropEffect.Move;
             }
             // Drag actor type
-            else if (_dragActorType != null && _dragActorType.HasValidDrag)
+            else if (actorTypeDragHelper != null)
             {
-                for (int i = 0; i < _dragActorType.Objects.Count; i++)
+                for (int i = 0; i < actorTypeDragHelper.Objects.Count; i++)
                 {
-                    var item = _dragActorType.Objects[i];
+                    var item = actorTypeDragHelper.Objects[i];
 
                     // Create actor
                     var actor = FlaxEngine.Object.New(item) as Actor;
@@ -563,9 +558,7 @@ namespace FlaxEditor.SceneGraph.GUI
             }
 
             // Clear cache
-            _dragActors?.OnDragDrop();
-            _dragAssets?.OnDragDrop();
-            _dragActorType?.OnDragDrop();
+            _dragXYZ?.OnDragDrop();
 
             // Check if scene has been modified
             if (result != DragDropEffect.None)
