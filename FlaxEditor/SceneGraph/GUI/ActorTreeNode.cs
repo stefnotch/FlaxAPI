@@ -19,9 +19,10 @@ namespace FlaxEditor.SceneGraph.GUI
     public class ActorTreeNode : TreeNode
     {
         private int _orderInParent;
-        private DragActors _dragActors;
-        private DragAssets _dragAssets;
-        private DragActorType _dragActorType;
+        private DragActorsGeneric _dragActors;
+        private DragAssetsGeneric _dragAssets;
+        private DragActorTypeGeneric _dragActorType;
+
 
         /// <summary>
         /// The actor node that owns this node.
@@ -228,19 +229,19 @@ namespace FlaxEditor.SceneGraph.GUI
 
             // Check if drop actors
             if (_dragActors == null)
-                _dragActors = new DragActors();
+                _dragActors = new DragActorsGeneric();
             if (_dragActors.OnDragEnter(data, ValidateDragActor))
                 return _dragActors.Effect;
 
             // Check if drag assets
             if (_dragAssets == null)
-                _dragAssets = new DragAssets();
+                _dragAssets = new DragAssetsGeneric();
             if (_dragAssets.OnDragEnter(data, ValidateDragAsset))
                 return _dragAssets.Effect;
 
             // Check if drag actor type
             if (_dragActorType == null)
-                _dragActorType = new DragActorType();
+                _dragActorType = new DragActorTypeGeneric();
             if (_dragActorType.OnDragEnter(data, ValidateDragActorType))
                 return _dragActorType.Effect;
 
@@ -614,7 +615,7 @@ namespace FlaxEditor.SceneGraph.GUI
         /// <inheritdoc />
         protected override void DoDragDrop()
         {
-            DragData data;
+            DragDataGeneric<ActorNode> data;
             var tree = ParentTree;
 
             // Check if this node is selected
@@ -628,11 +629,11 @@ namespace FlaxEditor.SceneGraph.GUI
                     if (e is ActorTreeNode node && node.ActorNode.CanDrag)
                         actors.Add(node.ActorNode);
                 }
-                data = DragActors.GetDragData(actors);
+                data = DragActorsGeneric.GetDragData(actors);
             }
             else
             {
-                data = DragActors.GetDragData(ActorNode);
+                data = DragActorsGeneric.GetDragData(ActorNode);
             }
 
             // Start drag operation

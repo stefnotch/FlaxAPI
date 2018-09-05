@@ -10,7 +10,7 @@ namespace FlaxEditor.Content.GUI
     public partial class ContentView
     {
         private bool _validDragOver;
-        private DragActors _dragActors;
+        private DragActorsGeneric _dragActors;
 
         /// <inheritdoc />
         public override DragDropEffect OnDragEnter(ref Vector2 location, DragData data)
@@ -28,7 +28,7 @@ namespace FlaxEditor.Content.GUI
 
             // Check if drop actor(s)
             if (_dragActors == null)
-                _dragActors = new DragActors();
+                _dragActors = new DragActorsGeneric();
             if (_dragActors.OnDragEnter(data, ValidateDragActors))
             {
                 _validDragOver = true;
@@ -43,7 +43,7 @@ namespace FlaxEditor.Content.GUI
             return actor.CanCreatePrefab && Editor.Instance.Windows.ContentWin.CurrentViewFolder.CanHaveAssets;
         }
 
-        private void ImportActors(DragActors actors, ContentFolder location)
+        private void ImportActors(DragActorsGeneric actors, ContentFolder location)
         {
             // Use only the first actor
             Editor.Instance.Prefabs.CreatePrefab(actors.Objects[0].Actor);

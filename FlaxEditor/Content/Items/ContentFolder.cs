@@ -44,7 +44,7 @@ namespace FlaxEditor.Content
     /// </summary>
     public class ContentFolder : ContentItem
     {
-        private DragItems _dragOverItems;
+        private DragItemsGeneric _dragOverItems;
         private bool _validDragOver;
 
         /// <summary>
@@ -256,7 +256,7 @@ namespace FlaxEditor.Content
 
             // Check if drop asset(s)
             if (_dragOverItems == null)
-                _dragOverItems = new DragItems();
+                _dragOverItems = new DragItemsGeneric();
             _dragOverItems.OnDragEnter(data, ValidateDragItem);
             _validDragOver = _dragOverItems.HasValidDrag;
             return _dragOverItems.Effect;

@@ -25,7 +25,7 @@ namespace FlaxEditor.GUI
         private bool _isMosueDown;
         private Vector2 _mosueDownPos;
         private Vector2 _mousePos;
-        private readonly DragAssets _dragOverElement = new DragAssets();
+        private readonly DragAssetsGeneric _dragOverElement = new DragAssetsGeneric();
 
         /// <summary>
         /// Gets or sets the selected item.
@@ -162,7 +162,7 @@ namespace FlaxEditor.GUI
             // Do the drag drop operation if has selected element
             if (_selected != null && new Rectangle(Vector2.Zero, Size).Contains(ref _mosueDownPos))
             {
-                DoDragDrop(DragAssets.GetDragData(_selected));
+                DoDragDrop(DragAssetsGeneric.GetDragData(_selected));
             }
         }
 

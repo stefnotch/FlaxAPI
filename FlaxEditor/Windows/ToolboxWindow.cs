@@ -149,12 +149,12 @@ namespace FlaxEditor.Windows
         private Item CreateEditorAssetItem(string name, string path)
         {
             path = StringUtils.CombinePaths(Globals.EditorFolder, path);
-            return new Item(name, GUI.Drag.DragItems.GetDragData(path));
+            return new Item(name, GUI.Drag.DragItemsGeneric.GetDragData(path));
         }
 
         private Item CreateActorItem(string name, Type type)
         {
-            return new Item(name, GUI.Drag.DragActorType.GetDragData(type));
+            return new Item(name, GUI.Drag.DragActorTypeGeneric.GetDragData(type));
         }
 
         private class Item : TreeNode

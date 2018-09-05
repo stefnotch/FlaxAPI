@@ -11,7 +11,7 @@ namespace FlaxEditor.Surface
 {
     public partial class VisjectSurface
     {
-        private DragAssets _dragOverItems = new DragAssets();
+        private DragAssetsGeneric _dragOverItems = new DragAssetsGeneric();
         private DragSurfaceParameter _dragOverParameter = new DragSurfaceParameter();
 
         /// <inheritdoc />

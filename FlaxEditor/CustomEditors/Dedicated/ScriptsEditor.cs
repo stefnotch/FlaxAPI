@@ -20,7 +20,7 @@ namespace FlaxEditor.CustomEditors.Dedicated
     /// <seealso cref="FlaxEngine.GUI.Control" />
     public class DragAreaControl : ContainerControl
     {
-        private DragScriptItems _dragScriptItems;
+        private DragScriptItemsGeneric _dragScriptItems;
 
         /// <summary>
         /// The parent scripts editor.
@@ -108,7 +108,7 @@ namespace FlaxEditor.CustomEditors.Dedicated
             var result = base.OnDragEnter(ref location, data);
 
             if (_dragScriptItems == null)
-                _dragScriptItems = new DragScriptItems();
+                _dragScriptItems = new DragScriptItemsGeneric();
             if (_dragScriptItems.OnDragEnter(data, ValidateScript))
                 result = _dragScriptItems.Effect;
 
@@ -296,7 +296,7 @@ namespace FlaxEditor.CustomEditors.Dedicated
         {
             var script = Script;
             _editor.OnScriptDragChange(true, script);
-            DoDragDrop(DragScripts.GetDragData(script));
+            DoDragDrop(DragScriptsGeneric.GetDragData(script));
             _editor.OnScriptDragChange(false, script);
         }
     }
@@ -347,7 +347,7 @@ namespace FlaxEditor.CustomEditors.Dedicated
             if (result != DragDropEffect.None)
                 return result;
 
-            if (data is DragDataText textData && DragScripts.IsValidData(textData))
+            if (data is DragDataTextGeneric<Script> textData && DragScriptsGeneric.IsValidData(textData))
                 return _dragEffect = DragDropEffect.Move;
 
             return result;

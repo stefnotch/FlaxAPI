@@ -32,9 +32,9 @@ namespace FlaxEditor.CustomEditors.Editors
             private Vector2 _mousePos;
 
             private bool _hasValidDragOver;
-            private DragActors _dragActors;
-            private DragAssets _dragAssets;
-            private DragScripts _dragScripts;
+            private DragActorsGeneric _dragActors;
+            private DragAssetsGeneric _dragAssets;
+            private DragScriptsGeneric _dragScripts;
 
             /// <summary>
             /// Gets or sets the allowed objects type (given type and all sub classes). Must be <see cref="Object"/> type of any subclass.
@@ -282,11 +282,11 @@ namespace FlaxEditor.CustomEditors.Editors
                 if (_value != null)
                 {
                     if (_value is Actor actor)
-                        DoDragDrop(DragActors.GetDragData(actor));
+                        DoDragDrop(DragActorsGeneric.GetDragData(actor));
                     else if (_value is Asset asset)
-                        DoDragDrop(DragAssets.GetDragData(asset));
+                        DoDragDrop(DragAssetsGeneric.GetDragData(asset));
                     else if (_value is Script script)
-                        DoDragDrop(DragScripts.GetDragData(script));
+                        DoDragDrop(DragScriptsGeneric.GetDragData(script));
                 }
             }
 
@@ -299,11 +299,11 @@ namespace FlaxEditor.CustomEditors.Editors
 
                 // Ensure to have valid drag helpers (uses lazy init)
                 if (_dragActors == null)
-                    _dragActors = new DragActors();
+                    _dragActors = new DragActorsGeneric();
                 if (_dragAssets == null)
-                    _dragAssets = new DragAssets();
+                    _dragAssets = new DragAssetsGeneric();
                 if (_dragScripts == null)
-                    _dragScripts = new DragScripts();
+                    _dragScripts = new DragScriptsGeneric();
 
                 _hasValidDragOver = false;
                 if (_dragActors.OnDragEnter(data, x => IsValid(x.Actor)))

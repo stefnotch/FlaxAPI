@@ -473,12 +473,12 @@ namespace FlaxEditor.Content
             if (Parent is ContentView view && view.IsSelected(this))
             {
                 // Drag selected item
-                data = DragItems.GetDragData(view.Selection);
+                data = DragItemsGeneric.GetDragData(view.Selection);
             }
             else
             {
                 // Drag single item
-                data = DragItems.GetDragData(this);
+                data = DragItemsGeneric.GetDragData(this);
             }
 
             // Start drag operation

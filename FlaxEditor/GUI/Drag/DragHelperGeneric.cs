@@ -11,7 +11,7 @@ namespace FlaxEditor.GUI.Drag
     /// Base class for drag and drop operation helpers.
     /// </summary>
     /// <typeparam name="T">Type of the objects to collect from drag data.</typeparam>
-    public abstract class DragHelper<T>
+    public abstract class DragHelperGeneric<T>
     {
         /// <summary>
         /// The objects gathered.
@@ -42,22 +42,37 @@ namespace FlaxEditor.GUI.Drag
             Objects.Clear();
         }
 
+        public bool OnDragEnter(DragData data, Func<T, bool> validateFunc)
+        {
+            if (data == null || validateFunc == null)
+                throw new ArgumentNullException();
+
+            if (data is DragDataGeneric<T> genericData)
+            {
+                return OnDragEnter(genericData, validateFunc);
+            }
+            else
+            {
+                return false;
+            }
+        }
+
         /// <summary>
         /// Called when drag enters.
         /// </summary>
         /// <param name="data">The data.</param>
         /// <param name="validateFunc">The validate function. Check if gathered object is valid to drop it.</param>
         /// <returns>True if drag event is valid and can be performed, otherwise false.</returns>
-        public bool OnDragEnter(DragData data, Func<T, bool> validateFunc)
+        public bool OnDragEnter(DragDataGeneric<T> data, Func<T, bool> validateFunc)
         {
             if (data == null || validateFunc == null)
                 throw new ArgumentNullException();
 
             Objects.Clear();
 
-            if (data is DragDataText text)
+            if (data is DragDataTextGeneric<T> text)
                 GetherObjects(text, validateFunc);
-            else if (data is DragDataFiles files)
+            else if (data is DragDataFilesGeneric<T> files)
                 GetherObjects(files, validateFunc);
 
             return HasValidDrag;
@@ -84,7 +99,7 @@ namespace FlaxEditor.GUI.Drag
         /// </summary>
         /// <param name="data">The data.</param>
         /// <param name="validateFunc">The validate function.</param>
-        protected virtual void GetherObjects(DragDataText data, Func<T, bool> validateFunc)
+        protected virtual void GetherObjects(DragDataTextGeneric<T> data, Func<T, bool> validateFunc)
         {
         }
 
@@ -93,7 +108,7 @@ namespace FlaxEditor.GUI.Drag
         /// </summary>
         /// <param name="data">The data.</param>
         /// <param name="validateFunc">The validate function.</param>
-        protected virtual void GetherObjects(DragDataFiles data, Func<T, bool> validateFunc)
+        protected virtual void GetherObjects(DragDataFilesGeneric<T> data, Func<T, bool> validateFunc)
         {
         }
     }

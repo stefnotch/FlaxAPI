@@ -52,7 +52,7 @@ namespace FlaxEditor.GUI.Drag
 
             Parameter = null;
 
-            if (data is DragDataText text)
+            if (data is DragDataTextGeneric<string> text)
                 GetherObjects(text, validateFunc);
 
             return HasValidDrag;
@@ -79,7 +79,7 @@ namespace FlaxEditor.GUI.Drag
         /// </summary>
         /// <param name="data">The data.</param>
         /// <param name="validateFunc">The validate function. Check if gathered object is valid to drop it.</param>
-        protected virtual void GetherObjects(DragDataText data, Func<string, bool> validateFunc)
+        protected virtual void GetherObjects(DragDataTextGeneric<string> data, Func<string, bool> validateFunc)
         {
             if (data.Text.StartsWith(DragPrefix))
             {
@@ -97,12 +97,12 @@ namespace FlaxEditor.GUI.Drag
         /// </summary>
         /// <param name="parameter">The parameter name.</param>
         /// <returns>The data.</returns>
-        public static DragDataText GetDragData(string parameter)
+        public static DragDataTextGeneric<string> GetDragData(string parameter)
         {
             if (parameter == null)
                 throw new ArgumentNullException();
 
-            return new DragDataText(DragPrefix + parameter);
+            return new DragDataTextGeneric<string>(DragPrefix + parameter);
         }
     }
 }

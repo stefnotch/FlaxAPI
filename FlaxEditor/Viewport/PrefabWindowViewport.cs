@@ -35,8 +35,8 @@ namespace FlaxEditor.Viewport
         private ViewportWidgetButton _rotateSnapping;
         private ViewportWidgetButton _scaleSnapping;
 
-        private readonly DragAssets _dragAssets = new DragAssets();
-        private readonly DragActorType _dragActorType = new DragActorType();
+        private readonly DragAssetsGeneric _dragAssets = new DragAssetsGeneric();
+        private readonly DragActorTypeGeneric _dragActorType = new DragActorTypeGeneric();
 
         /// <summary>
         /// The transform gizmo.

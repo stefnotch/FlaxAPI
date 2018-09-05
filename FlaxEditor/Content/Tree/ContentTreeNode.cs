@@ -13,7 +13,7 @@ namespace FlaxEditor.Content
     /// <seealso cref="TreeNode" />
     public class ContentTreeNode : TreeNode
     {
-        private DragItems _dragOverItems;
+        private DragItemsGeneric _dragOverItems;
 
         /// <summary>
         /// The folder.
@@ -135,7 +135,7 @@ namespace FlaxEditor.Content
         protected override DragDropEffect OnDragEnterHeader(DragData data)
         {
             if (_dragOverItems == null)
-                _dragOverItems = new DragItems();
+                _dragOverItems = new DragItemsGeneric();
 
             _dragOverItems.OnDragEnter(data, ValidateDragItem);
             return GetDragEffect(data);
@@ -185,7 +185,7 @@ namespace FlaxEditor.Content
         /// <inheritdoc />
         protected override void DoDragDrop()
         {
-            DoDragDrop(DragItems.GetDragData(_folder));
+            DoDragDrop(DragItemsGeneric.GetDragData(_folder));
         }
 
         /// <inheritdoc />

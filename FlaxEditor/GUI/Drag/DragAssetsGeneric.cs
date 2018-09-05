@@ -12,15 +12,10 @@ namespace FlaxEditor.GUI.Drag
     /// Helper class for handling <see cref="AssetItem"/> drag and drop.
     /// </summary>
     /// <seealso cref="AssetItem" />
-    public sealed class DragAssets : DragHelper<AssetItem>
+    public sealed class DragAssetsGeneric : DragHelperGeneric<AssetItem>
     {
-        /// <summary>
-        /// The default prefix for drag data used for <see cref="ContentItem"/>.
-        /// </summary>
-        public const string DragPrefix = DragItems.DragPrefix;
-
         /// <inheritdoc />
-        protected override void GetherObjects(DragDataText data, Func<AssetItem, bool> validateFunc)
+        protected override void GetherObjects(DragDataTextGeneric<AssetItem> data, Func<AssetItem, bool> validateFunc)
         {
             var items = ParseData(data);
             for (int i = 0; i < items.Length; i++)
@@ -35,27 +30,22 @@ namespace FlaxEditor.GUI.Drag
         /// </summary>
         /// <param name="data">The data.</param>
         /// <returns>Gathered objects or empty array if cannot get any valid.</returns>
-        public static AssetItem[] ParseData(DragDataText data)
+        public static AssetItem[] ParseData(DragDataTextGeneric<AssetItem> data)
         {
-            if (data.Text.StartsWith(DragPrefix))
+            // Remove prefix and parse splitted names
+            var paths = data.Text.Split('\n');
+            var results = new List<AssetItem>(paths.Length);
+            for (int i = 0; i < paths.Length; i++)
             {
-                // Remove prefix and parse splitted names
-                var paths = data.Text.Remove(0, DragPrefix.Length).Split('\n');
-                var results = new List<AssetItem>(paths.Length);
-                for (int i = 0; i < paths.Length; i++)
-                {
-                    // Find element
-                    var obj = Editor.Instance.ContentDatabase.Find(paths[i]) as AssetItem;
+                // Find element
+                var obj = Editor.Instance.ContentDatabase.Find(paths[i]) as AssetItem;
 
-                    // Check it
-                    if (obj != null)
-                        results.Add(obj);
-                }
-
-                return results.ToArray();
+                // Check it
+                if (obj != null)
+                    results.Add(obj);
             }
 
-            return new AssetItem[0];
+            return results.ToArray();
         }
 
         /// <summary>
@@ -63,9 +53,9 @@ namespace FlaxEditor.GUI.Drag
         /// </summary>
         /// <param name="asset">The asset.</param>
         /// <returns>The data.</returns>
-        public static DragDataText GetDragData(Asset asset)
+        public static DragDataTextGeneric<AssetItem> GetDragData(Asset asset)
         {
-            return DragItems.GetDragData(Editor.Instance.ContentDatabase.Find(asset.ID));
+            return DragItemsGeneric.GetDragData<AssetItem>(Editor.Instance.ContentDatabase.Find(asset.ID));
         }
 
         /// <summary>
@@ -73,9 +63,9 @@ namespace FlaxEditor.GUI.Drag
         /// </summary>
         /// <param name="item">The item.</param>
         /// <returns>The data.</returns>
-        public static DragDataText GetDragData(AssetItem item)
+        public static DragDataTextGeneric<AssetItem> GetDragData(AssetItem item)
         {
-            return DragItems.GetDragData(item);
+            return DragItemsGeneric.GetDragData<AssetItem>(item);
         }
 
         /// <summary>
@@ -83,9 +73,9 @@ namespace FlaxEditor.GUI.Drag
         /// </summary>
         /// <param name="items">The items.</param>
         /// <returns>The data.</returns>
-        public static DragDataText GetDragData(IEnumerable<AssetItem> items)
+        public static DragDataTextGeneric<AssetItem> GetDragData(IEnumerable<AssetItem> items)
         {
-            return DragItems.GetDragData(items);
+            return DragItemsGeneric.GetDragData<AssetItem>(items);
         }
     }
 }
