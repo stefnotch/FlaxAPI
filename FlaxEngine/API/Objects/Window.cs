@@ -176,7 +176,7 @@ namespace FlaxEngine
 #if UNIT_TEST_COMPILANT
             throw new NotImplementedException("Unit tests, don't support methods calls. Only properties can be get or set.");
 #else
-            if (data is DragDataTextGeneric<object> text)
+            if (data is IDragDataTextGeneric<object> text)
                 Internal_DoDragDropText(unmanagedPtr, text.TextWithType);
             else
                 throw new NotImplementedException("Only DragDataText drag and drop is supported.");
@@ -317,6 +317,7 @@ namespace FlaxEngine
                 Type genericType = template.MakeGenericType(typeArgument);
 
                 dragData = Activator.CreateInstance(genericType, text) as DragData;
+                //dragData = new DragDataTextGeneric<object>(data[0]);
             }
             else
             {
@@ -339,6 +340,7 @@ namespace FlaxEngine
                 Type genericType = template.MakeGenericType(typeArgument);
 
                 dragData = Activator.CreateInstance(genericType, text) as DragData;
+                //dragData = new DragDataTextGeneric<object>(data[0]);
             }
             else
             {
@@ -361,6 +363,7 @@ namespace FlaxEngine
                 Type genericType = template.MakeGenericType(typeArgument);
 
                 dragData = Activator.CreateInstance(genericType, text) as DragData;
+                //dragData = new DragDataTextGeneric<object>(data[0]);
             }
             else
             {

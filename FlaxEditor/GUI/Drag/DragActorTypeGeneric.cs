@@ -13,7 +13,7 @@ namespace FlaxEditor.GUI.Drag
     /// </summary>
     /// <seealso cref="Actor" />
     /// <seealso cref="ActorNode" />
-    public sealed class DragActorTypeGeneric : DragHelperGeneric<Type>
+    public sealed class DragActorTypeGeneric : DragHelper<Type>
     {
         /// <inheritdoc />
         protected override void GetherObjects(DragDataTextGeneric<Type> data, Func<Type, bool> validateFunc)

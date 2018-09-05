@@ -11,7 +11,7 @@ namespace FlaxEditor.GUI.Drag
     /// Helper class for handling <see cref="ScriptItem"/> drag and drop.
     /// </summary>
     /// <seealso cref="ScriptItem" />
-    public sealed class DragScriptItemsGeneric : DragHelperGeneric<ScriptItem>
+    public sealed class DragScriptItemsGeneric : DragHelper<ScriptItem>
     {
         /// <inheritdoc />
         protected override void GetherObjects(DragDataTextGeneric<ScriptItem> data, Func<ScriptItem, bool> validateFunc)

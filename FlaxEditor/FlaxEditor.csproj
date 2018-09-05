@@ -193,7 +193,7 @@
     <Compile Include="GUI\Drag\DragActorsGeneric.cs" />
     <Compile Include="GUI\Drag\DragActorTypeGeneric.cs" />
     <Compile Include="GUI\Drag\DragAssetsGeneric.cs" />
-    <Compile Include="GUI\Drag\DragHelperGeneric.cs" />
+    <Compile Include="GUI\Drag\DragHelper.cs" />
     <Compile Include="GUI\Drag\DragSurfaceParameter.cs" />
     <Compile Include="GUI\Drag\DragHelpers.cs" />
     <Compile Include="GUI\Drag\DragItemsGeneric.cs" />

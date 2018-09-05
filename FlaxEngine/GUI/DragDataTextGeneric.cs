@@ -6,11 +6,16 @@ using System.Threading.Tasks;
 
 namespace FlaxEngine.GUI
 {
+    public interface IDragDataTextGeneric<out T>
+    {
+        string TextWithType { get; }
+    }
+
     /// <summary>
     /// The drag and drop text data.
     /// </summary>
     /// <seealso cref="FlaxEngine.GUI.DragData" />
-    public class DragDataTextGeneric<T> : DragDataGeneric<T>
+    public class DragDataTextGeneric<T> : DragDataGeneric<T>, IDragDataTextGeneric<T>
     {
         /// <summary>
         /// The text.

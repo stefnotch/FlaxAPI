@@ -11,7 +11,7 @@ namespace FlaxEditor.GUI.Drag
     /// Base class for drag and drop operation helpers.
     /// </summary>
     /// <typeparam name="T">Type of the objects to collect from drag data.</typeparam>
-    public abstract class DragHelperGeneric<T>
+    public abstract class DragHelper<T>
     {
         /// <summary>
         /// The objects gathered.

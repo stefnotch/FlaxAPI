@@ -13,7 +13,7 @@ namespace FlaxEditor.GUI.Drag
     /// </summary>
     /// <seealso cref="Actor" />
     /// <seealso cref="ActorNode" />
-    public sealed class DragActorsGeneric : DragHelperGeneric<ActorNode>
+    public sealed class DragActorsGeneric : DragHelper<ActorNode>
     {
 
         /// <inheritdoc />

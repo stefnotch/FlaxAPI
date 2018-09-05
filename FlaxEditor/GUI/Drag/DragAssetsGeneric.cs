@@ -12,7 +12,7 @@ namespace FlaxEditor.GUI.Drag
     /// Helper class for handling <see cref="AssetItem"/> drag and drop.
     /// </summary>
     /// <seealso cref="AssetItem" />
-    public sealed class DragAssetsGeneric : DragHelperGeneric<AssetItem>
+    public sealed class DragAssetsGeneric : DragHelper<AssetItem>
     {
         /// <inheritdoc />
         protected override void GetherObjects(DragDataTextGeneric<AssetItem> data, Func<AssetItem, bool> validateFunc)
