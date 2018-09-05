@@ -18,12 +18,14 @@ namespace FlaxEngine.GUI
         public readonly string Text;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="DragDataText"/> class.
+        /// Initializes a new instance of the <see cref="DragDataTextGeneric"/> class.
         /// </summary>
         /// <param name="text">The text.</param>
         public DragDataTextGeneric(string text)
         {
             Text = text;
         }
+
+        public string TextWithType => typeof(T).ToString() + "?!" + this.Text;
     }
 }

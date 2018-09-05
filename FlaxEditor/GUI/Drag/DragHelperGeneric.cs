@@ -47,9 +47,16 @@ namespace FlaxEditor.GUI.Drag
             if (data == null || validateFunc == null)
                 throw new ArgumentNullException();
 
+            Objects.Clear();
+
             if (data is DragDataGeneric<T> genericData)
             {
                 return OnDragEnter(genericData, validateFunc);
+            }
+            else if (data is DragDataFiles files)
+            {
+                GetherObjects(files, validateFunc);
+                return HasValidDrag;
             }
             else
             {
@@ -72,8 +79,6 @@ namespace FlaxEditor.GUI.Drag
 
             if (data is DragDataTextGeneric<T> text)
                 GetherObjects(text, validateFunc);
-            else if (data is DragDataFilesGeneric<T> files)
-                GetherObjects(files, validateFunc);
 
             return HasValidDrag;
         }
@@ -108,7 +113,7 @@ namespace FlaxEditor.GUI.Drag
         /// </summary>
         /// <param name="data">The data.</param>
         /// <param name="validateFunc">The validate function.</param>
-        protected virtual void GetherObjects(DragDataFilesGeneric<T> data, Func<T, bool> validateFunc)
+        protected virtual void GetherObjects(DragDataFiles data, Func<T, bool> validateFunc)
         {
         }
     }

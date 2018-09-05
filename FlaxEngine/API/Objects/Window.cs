@@ -176,8 +176,8 @@ namespace FlaxEngine
 #if UNIT_TEST_COMPILANT
             throw new NotImplementedException("Unit tests, don't support methods calls. Only properties can be get or set.");
 #else
-            if (data is DragDataText text)
-                Internal_DoDragDropText(unmanagedPtr, text.Text);
+            if (data is DragDataTextGeneric<object> text)
+                Internal_DoDragDropText(unmanagedPtr, text.TextWithType);
             else
                 throw new NotImplementedException("Only DragDataText drag and drop is supported.");
 #endif
@@ -307,9 +307,21 @@ namespace FlaxEngine
         {
             DragData dragData;
             if (isText)
-                dragData = new DragDataText(data[0]);
+            {
+                string[] splitted = data[0].Split(new[] { "?!" }, StringSplitOptions.None);
+                string type = splitted[0];
+                string text = splitted[1];
+                Type typeArgument = Type.GetType(type);
+                Type template = typeof(DragDataTextGeneric<>);
+
+                Type genericType = template.MakeGenericType(typeArgument);
+
+                dragData = Activator.CreateInstance(genericType, text) as DragData;
+            }
             else
+            {
                 dragData = new DragDataFiles(data);
+            }
             return GUI.OnDragEnter(ref mousePos, dragData);
         }
 
@@ -317,9 +329,21 @@ namespace FlaxEngine
         {
             DragData dragData;
             if (isText)
-                dragData = new DragDataText(data[0]);
+            {
+                string[] splitted = data[0].Split(new[] { "?!" }, StringSplitOptions.None);
+                string type = splitted[0];
+                string text = splitted[1];
+                Type typeArgument = Type.GetType(type);
+                Type template = typeof(DragDataTextGeneric<>);
+
+                Type genericType = template.MakeGenericType(typeArgument);
+
+                dragData = Activator.CreateInstance(genericType, text) as DragData;
+            }
             else
+            {
                 dragData = new DragDataFiles(data);
+            }
             return GUI.OnDragMove(ref mousePos, dragData);
         }
 
@@ -327,9 +351,21 @@ namespace FlaxEngine
         {
             DragData dragData;
             if (isText)
-                dragData = new DragDataText(data[0]);
+            {
+                string[] splitted = data[0].Split(new[] { "?!" }, StringSplitOptions.None);
+                string type = splitted[0];
+                string text = splitted[1];
+                Type typeArgument = Type.GetType(type);
+                Type template = typeof(DragDataTextGeneric<>);
+
+                Type genericType = template.MakeGenericType(typeArgument);
+
+                dragData = Activator.CreateInstance(genericType, text) as DragData;
+            }
             else
+            {
                 dragData = new DragDataFiles(data);
+            }
             return GUI.OnDragDrop(ref mousePos, dragData);
         }
 
