@@ -849,6 +849,7 @@ namespace FlaxEditor.Modules
             FlaxEngine.Content.AssetDisposing += Content_OnAssetDisposing;
 
             // Setup content proxies
+            Proxy.Add(new NumberGraphProxy());
             Proxy.Add(new TextureProxy());
             Proxy.Add(new ModelProxy());
             Proxy.Add(new SkinnedModelProxy());

@@ -25,7 +25,7 @@ namespace FlaxEditor.Windows.Assets
     /// <seealso cref="Material" />
     /// <seealso cref="FlaxEditor.Windows.Assets.AssetEditorWindow" />
     /// <seealso cref="FlaxEditor.Surface.IVisjectSurfaceOwner" />
-    public sealed class MaterialWindow : ClonedAssetEditorWindowBase<Material>, IVisjectSurfaceOwner
+    public sealed class MaterialWindow : VisjectWindowBase<Material, MaterialSurface>, IVisjectSurfaceOwner
     {
         /// <summary>
         /// The material properties proxy object.
@@ -418,41 +418,16 @@ namespace FlaxEditor.Windows.Assets
             }
         }
 
-        private readonly SplitPanel _split1;
-        private readonly SplitPanel _split2;
         private readonly MaterialPreview _preview;
-        private readonly MaterialSurface _surface;
 
-        private readonly ToolStripButton _saveButton;
         private readonly PropertiesProxy _properties;
         private bool _isWaitingForSurfaceLoad;
-        private bool _tmpMaterialIsDirty;
         internal bool _paramValueChange;
-
-        /// <summary>
-        /// Gets the material surface.
-        /// </summary>
-        public MaterialSurface Surface => _surface;
 
         /// <inheritdoc />
         public MaterialWindow(Editor editor, AssetItem item)
         : base(editor, item)
         {
-            // Split Panel 1
-            _split1 = new SplitPanel(Orientation.Horizontal, ScrollBars.None, ScrollBars.None)
-            {
-                DockStyle = DockStyle.Fill,
-                SplitterValue = 0.7f,
-                Parent = this
-            };
-
-            // Split Panel 2
-            _split2 = new SplitPanel(Orientation.Vertical, ScrollBars.None, ScrollBars.Vertical)
-            {
-                DockStyle = DockStyle.Fill,
-                SplitterValue = 0.4f,
-                Parent = _split1.Panel2
-            };
 
             // Material preview
             _preview = new MaterialPreview(true)
@@ -475,9 +450,8 @@ namespace FlaxEditor.Windows.Assets
             };
 
             // Toolstrip
-            _saveButton = (ToolStripButton)_toolstrip.AddButton(Editor.Icons.Save32, Save).LinkTooltip("Save");
             _toolstrip.AddSeparator();
-            _toolstrip.AddButton(editor.Icons.PageScale32, _surface.ShowWholeGraph).LinkTooltip("Show whole graph");
+            _toolstrip.AddButton(editor.Icons.PageScale32, Surface.ShowWholeGraph).LinkTooltip("Show whole graph");
             _toolstrip.AddSeparator();
             _toolstrip.AddButton(editor.Icons.BracketsSlash32, () => ShowSourceCode(_asset)).LinkTooltip("Show generated shader source code");
             _toolstrip.AddButton(editor.Icons.Docs32, () => Application.StartProcess(Utilities.Constants.DocsUrl + "manual/graphics/materials/index.html")).LinkTooltip("See documentation to learn more");
@@ -485,7 +459,7 @@ namespace FlaxEditor.Windows.Assets
 
         private void OnMaterialPropertyEdited()
         {
-            _surface.MarkAsEdited(!_paramValueChange);
+            Surface.MarkAsEdited(!_paramValueChange);
             _paramValueChange = false;
             RefreshMainNode();
         }
@@ -531,16 +505,16 @@ namespace FlaxEditor.Windows.Assets
         /// Refreshes temporary material to see changes live when editing the surface.
         /// </summary>
         /// <returns>True if cannot refresh it, otherwise false.</returns>
-        public bool RefreshTempMaterial()
+        public override bool RefreshTempAsset()
         {
             // Early check
             if (_asset == null || _isWaitingForSurfaceLoad)
                 return true;
 
             // Check if surface has been edited
-            if (_surface.IsEdited)
+            if (Surface.IsEdited)
             {
-                _surface.Save();
+                Surface.Save();
             }
 
             return false;
@@ -566,7 +540,7 @@ namespace FlaxEditor.Windows.Assets
         {
             get
             {
-                var mainNode = _surface.FindNode(1, 1) as Surface.Archetypes.Material.SurfaceNodeMaterial;
+                var mainNode = Surface.FindNode(1, 1) as Surface.Archetypes.Material.SurfaceNodeMaterial;
                 if (mainNode == null)
                 {
                     // Error
@@ -590,61 +564,13 @@ namespace FlaxEditor.Windows.Assets
             mainNode.UpdateBoxes();
         }
 
-        /// <summary>
-        /// Scrolls the view to the main material node.
-        /// </summary>
-        public void ScrollViewToMain()
-        {
-            // Find main node
-            var mainNode = MainNode;
-            if (mainNode == null)
-                return;
-
-            // Change scale and position
-            _surface.ViewScale = 0.5f;
-            _surface.ViewCenterPosition = mainNode.Center;
-        }
-
         /// <inheritdoc />
-        public override void Save()
+        public override void OnSave()
         {
-            // Check if don't need to push any new changes to the original asset
-            if (!IsEdited)
-                return;
-
-            // Just in case refresh data
-            if (RefreshTempMaterial())
-            {
-                // Error
-                return;
-            }
-
             // Copy shader cache from the temporary material (will skip compilation on Reload - faster)
             Guid dstId = _item.ID;
             Guid srcId = _asset.ID;
             Editor.Internal_CopyCache(ref dstId, ref srcId);
-
-            // Update original material so user can see changes in the scene
-            if (SaveToOriginal())
-            {
-                // Error
-                return;
-            }
-
-            // Clear flag
-            ClearEditedFlag();
-
-            // Update
-            OnSurfaceEditedChanged();
-            _item.RefreshThumbnail();
-        }
-
-        /// <inheritdoc />
-        protected override void UpdateToolstrip()
-        {
-            _saveButton.Enabled = IsEdited;
-
-            base.UpdateToolstrip();
         }
 
         /// <inheritdoc />
@@ -683,51 +609,16 @@ namespace FlaxEditor.Windows.Assets
                 if (_asset.SaveSurface(value, info))
                 {
                     // Error
-                    _surface.MarkAsEdited();
+                    Surface.MarkAsEdited();
                     Editor.LogError("Failed to save material surface data");
                 }
             }
         }
 
         /// <inheritdoc />
-        public void OnContextCreated(VisjectSurfaceContext context)
-        {
-        }
-
-        /// <inheritdoc />
-        public void OnSurfaceEditedChanged()
-        {
-            if (_surface.IsEdited)
-                MarkAsEdited();
-        }
-
-        /// <inheritdoc />
-        public void OnSurfaceGraphEdited()
-        {
-            // Mark as dirty
-            _tmpMaterialIsDirty = true;
-        }
-
-        /// <inheritdoc />
-        public void OnSurfaceClose()
-        {
-            Close();
-        }
-
-        /// <inheritdoc />
         public override void Update(float deltaTime)
         {
             base.Update(deltaTime);
-
-            // Check if temporary material need to be updated
-            if (_tmpMaterialIsDirty)
-            {
-                // Clear flag
-                _tmpMaterialIsDirty = false;
-
-                // Update
-                RefreshTempMaterial();
-            }
 
             // Check if need to load surface
             if (_isWaitingForSurfaceLoad && _asset.IsLoaded)
@@ -749,7 +640,7 @@ namespace FlaxEditor.Windows.Assets
                 }
 
                 // Load surface graph
-                if (_surface.Load(data))
+                if (Surface.Load(data))
                 {
                     // Error
                     Editor.LogError("Failed to load material surface.");
@@ -758,37 +649,9 @@ namespace FlaxEditor.Windows.Assets
                 }
 
                 // Setup
-                _surface.Enabled = true;
+                Surface.Enabled = true;
                 ClearEditedFlag();
             }
-        }
-
-        /// <inheritdoc />
-        public override bool UseLayoutData => true;
-
-        /// <inheritdoc />
-        public override void OnLayoutSerialize(XmlWriter writer)
-        {
-            writer.WriteAttributeString("Split1", _split1.SplitterValue.ToString());
-            writer.WriteAttributeString("Split2", _split2.SplitterValue.ToString());
-        }
-
-        /// <inheritdoc />
-        public override void OnLayoutDeserialize(XmlElement node)
-        {
-            float value1;
-
-            if (float.TryParse(node.GetAttribute("Split1"), out value1))
-                _split1.SplitterValue = value1;
-            if (float.TryParse(node.GetAttribute("Split2"), out value1))
-                _split2.SplitterValue = value1;
-        }
-
-        /// <inheritdoc />
-        public override void OnLayoutDeserialize()
-        {
-            _split1.SplitterValue = 0.7f;
-            _split2.SplitterValue = 0.4f;
         }
     }
 }

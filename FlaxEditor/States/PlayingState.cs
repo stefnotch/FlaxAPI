@@ -55,13 +55,13 @@ namespace FlaxEditor.States
         /// </summary>
         public bool IsPaused
         {
-            get => Time.GamePaused;
+            get => false; // Time.GamePaused;
             set
             {
                 if (!IsActive)
                     throw new InvalidOperationException();
 
-                Time.GamePaused = value;
+                //Time.GamePaused = value;
             }
         }
 

@@ -1,7 +1,8 @@
-// Copyright (c) 2012-2019 Wojciech Figat. All rights reserved.
-
 using System;
-using System.Xml;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using FlaxEditor.Content;
 using FlaxEditor.CustomEditors;
 using FlaxEditor.CustomEditors.GUI;
@@ -12,20 +13,10 @@ using FlaxEditor.Surface;
 using FlaxEditor.Viewport.Previews;
 using FlaxEngine;
 using FlaxEngine.GUI;
-using FlaxEngine.Rendering;
-
-// ReSharper disable MemberCanBePrivate.Local
 
 namespace FlaxEditor.Windows.Assets
 {
-    /// <summary>
-    /// Particle Emitter window allows to view and edit <see cref="ParticleEmitter"/> asset.
-    /// Note: it uses ClonedAssetEditorWindowBase which is creating cloned asset to edit/preview.
-    /// </summary>
-    /// <seealso cref="ParticleEmitter" />
-    /// <seealso cref="FlaxEditor.Windows.Assets.AssetEditorWindow" />
-    /// <seealso cref="FlaxEditor.Surface.IVisjectSurfaceOwner" />
-    public sealed class ParticleEmitterWindow : VisjectWindowBase<ParticleEmitter, ParticleEmitterSurface>, IVisjectSurfaceOwner
+    public class NumberGraphWindow : VisjectWindowBase<JsonAsset, NumberGraphSurface>, IVisjectSurfaceOwner
     {
         /// <summary>
         /// The properties proxy object.
@@ -34,10 +25,13 @@ namespace FlaxEditor.Windows.Assets
         {
             [EditorOrder(1000), EditorDisplay("Parameters"), CustomEditor(typeof(ParametersEditor))]
             // ReSharper disable once UnusedAutoPropertyAccessor.Local
-            public ParticleEmitterWindow ParticleEmitterWinRef { get; set; }
+            public NumberGraphWindow WinRef { get; set; }
+
+            [EditorOrder(20), EditorDisplay("General"), Tooltip("It's for demo purposes")]
+            public int DemoInteger { get; set; }
 
             /// <summary>
-            /// Custom editor for editing Particle Emitter parameters collection.
+            /// Custom editor for editing number graph parameters collection.
             /// </summary>
             /// <seealso cref="FlaxEditor.CustomEditors.CustomEditor" />
             public class ParametersEditor : CustomEditor
@@ -51,29 +45,24 @@ namespace FlaxEditor.Windows.Assets
                     Float = (int)ParameterType.Float,
                     Vector2 = (int)ParameterType.Vector2,
                     Vector3 = (int)ParameterType.Vector3,
-                    Vector4 = (int)ParameterType.Vector4,
-                    Color = (int)ParameterType.Color,
-                    Texture = (int)ParameterType.Texture,
-                    RenderTarget = (int)ParameterType.RenderTarget,
-                    RenderTargetArray = (int)ParameterType.RenderTargetArray,
-                    RenderTargetVolume = (int)ParameterType.RenderTargetVolume,
-                    Matrix = (int)ParameterType.Matrix,
+                    Vector4 = (int)ParameterType.Vector4
                 }
 
                 /// <inheritdoc />
                 public override DisplayStyle Style => DisplayStyle.InlineIntoParent;
 
+                private NumberGraphWindow Window => Values[0] as NumberGraphWindow;
+
                 /// <inheritdoc />
                 public override void Initialize(LayoutElementsContainer layout)
                 {
-                    var particleEmitterWin = Values[0] as ParticleEmitterWindow;
-                    var particleEmitter = particleEmitterWin?.Asset;
-                    if (particleEmitter == null || !particleEmitter.IsLoaded)
+                    var numberGraph = Window?.Asset;
+                    if (numberGraph == null || !numberGraph.IsLoaded)
                     {
                         layout.Label("Loading...");
                         return;
                     }
-                    var parameters = particleEmitterWin.Surface.Parameters;
+                    var parameters = Window.Surface.Parameters;
 
                     for (int i = 0; i < parameters.Count; i++)
                     {
@@ -88,22 +77,6 @@ namespace FlaxEditor.Windows.Assets
                         object[] attributes = null;
                         switch (p.Type)
                         {
-                        case ParameterType.CubeTexture:
-                            pType = typeof(CubeTexture);
-                            pGuidType = true;
-                            break;
-                        case ParameterType.Texture:
-                        case ParameterType.NormalMap:
-                            pType = typeof(Texture);
-                            pGuidType = true;
-                            break;
-                        case ParameterType.RenderTarget:
-                        case ParameterType.RenderTargetArray:
-                        case ParameterType.RenderTargetCube:
-                        case ParameterType.RenderTargetVolume:
-                            pType = typeof(RenderTarget);
-                            pGuidType = true;
-                            break;
                         default:
                             pType = p.Value.GetType();
                             // TODO: support custom attributes with defined value range for parameter (min, max)
@@ -116,12 +89,12 @@ namespace FlaxEditor.Windows.Assets
                             pValue,
                             (instance, index) =>
                             {
-                                var win = (ParticleEmitterWindow)instance;
+                                var win = (NumberGraphWindow)instance;
                                 return win.Surface.Parameters[pIndex].Value;
                             },
                             (instance, index, value) =>
                             {
-                                var win = (ParticleEmitterWindow)instance;
+                                var win = (NumberGraphWindow)instance;
 
                                 // Visject surface parameters are only value type objects so convert value if need to (eg. instead of texture ref write texture id)
                                 var surfaceParam = value;
@@ -156,8 +129,7 @@ namespace FlaxEditor.Windows.Assets
 
                 private DragData DragParameter(DragablePropertyNameLabel label)
                 {
-                    var win = (ParticleEmitterWindow)Values[0];
-                    var parameter = win.Surface.Parameters[(int)label.Tag];
+                    var parameter = Window.Surface.Parameters[(int)label.Tag];
                     return DragNames.GetDragData(SurfaceParameter.DragPrefix, parameter.Name);
                 }
 
@@ -181,22 +153,13 @@ namespace FlaxEditor.Windows.Assets
                 /// <param name="type">The type.</param>
                 private void AddParameter(ParameterType type)
                 {
-                    var win = Values[0] as ParticleEmitterWindow;
-                    var particleEmitter = win?.Asset;
+                    var particleEmitter = Window?.Asset;
                     if (particleEmitter == null || !particleEmitter.IsLoaded)
                         return;
 
                     var param = SurfaceParameter.Create(type);
-                    if (type == ParameterType.NormalMap)
-                    {
-                        // Use default normal map texture (don't load asset here, just lookup registry for id at path)
-                        string typeName;
-                        Guid id;
-                        FlaxEngine.Content.GetAssetInfo(StringUtils.CombinePaths(Globals.EngineFolder, "Textures/NormalTexture.flax"), out typeName, out id);
-                        param.Value = id;
-                    }
-                    win.Surface.Parameters.Add(param);
-                    win.Surface.OnParamCreated(param);
+                    Window.Surface.Parameters.Add(param);
+                    Window.Surface.OnParamCreated(param);
                     RebuildLayout();
                 }
 
@@ -207,8 +170,7 @@ namespace FlaxEditor.Windows.Assets
                 /// <param name="label">The label control.</param>
                 private void StartParameterRenaming(int index, Control label)
                 {
-                    var win = (ParticleEmitterWindow)Values[0];
-                    var parameter = win.Surface.Parameters[index];
+                    var parameter = Window.Surface.Parameters[index];
                     var dialog = RenamePopup.Show(label, new Rectangle(0, 0, label.Width - 2, label.Height), parameter.Name, false);
                     dialog.Tag = index;
                     dialog.Renamed += OnParameterRenamed;
@@ -219,10 +181,9 @@ namespace FlaxEditor.Windows.Assets
                     var index = (int)renamePopup.Tag;
                     var newName = renamePopup.Text;
 
-                    var win = (ParticleEmitterWindow)Values[0];
-                    var param = win.Surface.Parameters[index];
+                    var param = Window.Surface.Parameters[index];
                     param.Name = newName;
-                    win.Surface.OnParamRenamed(param);
+                    Window.Surface.OnParamRenamed(param);
                     RebuildLayout();
                 }
 
@@ -232,22 +193,20 @@ namespace FlaxEditor.Windows.Assets
                 /// <param name="index">The index.</param>
                 private void DeleteParameter(int index)
                 {
-                    var win = (ParticleEmitterWindow)Values[0];
-                    var param = win.Surface.Parameters[index];
-                    win.Surface.Parameters.RemoveAt(index);
-                    win.Surface.OnParamDeleted(param);
+                    var param = Window.Surface.Parameters[index];
+                    Window.Surface.Parameters.RemoveAt(index);
+                    Window.Surface.OnParamDeleted(param);
                     RebuildLayout();
                 }
             }
 
             /// <summary>
-            /// Gathers parameters from the specified ParticleEmitter.
+            /// Gathers parameters from the specified window.
             /// </summary>
-            /// <param name="particleEmitterWin">The ParticleEmitter window.</param>
-            public void OnLoad(ParticleEmitterWindow particleEmitterWin)
+            public void OnLoad(NumberGraphWindow window)
             {
                 // Link
-                ParticleEmitterWinRef = particleEmitterWin;
+                WinRef = window;
             }
 
             /// <summary>
@@ -256,25 +215,24 @@ namespace FlaxEditor.Windows.Assets
             public void OnClean()
             {
                 // Unlink
-                ParticleEmitterWinRef = null;
+                WinRef = null;
             }
         }
 
-        private readonly ParticleEmitterPreview _preview;
+        private readonly NumberGraphPreview _preview;
         private readonly CustomEditorPresenter _propertiesEditor;
 
         private readonly PropertiesProxy _properties;
         private bool _isWaitingForSurfaceLoad;
 
         /// <inheritdoc />
-        public ParticleEmitterWindow(Editor editor, AssetItem item)
+        public NumberGraphWindow(Editor editor, AssetItem item)
         : base(editor, item)
         {
 
-            // ParticleEmitter preview
-            _preview = new ParticleEmitterPreview(true)
+            // ParticleEmitter preview6
+            _preview = new NumberGraphPreview(true)
             {
-                PlaySimulation = true,
                 Parent = _split2.Panel1
             };
 
@@ -287,7 +245,7 @@ namespace FlaxEditor.Windows.Assets
             _propertiesEditor = propertiesEditor;
 
             // Surface
-            _surface = new ParticleEmitterSurface(this, Save)
+            _surface = new NumberGraphSurface(this, Save)
             {
                 Parent = _split1.Panel1,
                 Enabled = false
@@ -307,15 +265,15 @@ namespace FlaxEditor.Windows.Assets
         }
 
         /// <summary>
-        /// Shows the ParticleEmitter source code window.
+        /// Shows the source code window.
         /// </summary>
-        /// <param name="particleEmitter">The ParticleEmitter asset.</param>
-        public static void ShowSourceCode(ParticleEmitter particleEmitter)
+        /// <param name="asset">The json asset.</param>
+        public static void ShowSourceCode(JsonAsset asset)
         {
-            var source = Editor.GetParticleEmitterShaderSourceCode(particleEmitter);
+            var source = asset.Data;
             if (string.IsNullOrEmpty(source))
             {
-                MessageBox.Show("No generated shader source code.", "No source.");
+                MessageBox.Show("No JSON data.", "No source.");
                 return;
             }
 
@@ -326,7 +284,7 @@ namespace FlaxEditor.Windows.Assets
             settings.HasSizingFrame = false;
             settings.StartPosition = WindowStartPosition.CenterScreen;
             settings.Size = new Vector2(500, 600);
-            settings.Title = "Particle Emitter GPU Simulation Source";
+            settings.Title = "JSON Asset Source";
             var dialog = Window.Create(settings);
 
             var copyButton = new Button(4, 4, 100);
@@ -365,17 +323,70 @@ namespace FlaxEditor.Windows.Assets
         /// <inheritdoc />
         public override void OnSave()
         {
-            // Copy shader cache from the temporary Particle Emitter (will skip compilation on Reload - faster)
-            Guid dstId = _item.ID;
-            Guid srcId = _asset.ID;
-            Editor.Internal_CopyCache(ref dstId, ref srcId);
+            // Save the internal JsonSurface
+            InternalSaveToOriginal();
+        }
+
+        private bool InternalSaveToOriginal()
+        {
+            // Wait until temporary asset file be fully loaded
+            if (_asset.WaitForLoaded())
+            {
+                // Error
+                Editor.LogError(string.Format("Cannot save asset {0}. Wait for temporary asset loaded failed.", _item.Path));
+                return true;
+            }
+
+            // Cache data
+            var id = _item.ID;
+
+            // Check if original asset is loaded
+            var originalAsset = FlaxEngine.Content.GetAsset<JsonAsset>(id) ?? FlaxEngine.Content.LoadAsync<JsonAsset>(id);
+            if (originalAsset)
+            {
+                // Wait for loaded to prevent any issues
+                if (originalAsset.WaitForLoaded())
+                {
+                    // Error
+                    Editor.LogError(string.Format("Cannot save asset {0}. Wait for original asset loaded failed.", _item.Path));
+                    return true;
+                }
+
+                // Copy temporary material to the final destination
+                JsonSurface.SaveSurface(originalAsset, SurfaceData);
+            }
+            else
+            {
+                Editor.LogError("Cannot find original asset");
+            }
+
+
+            // Refresh thumbnail
+            _item.RefreshThumbnail();
+
+            return false;
+        }
+
+        protected override JsonAsset LoadAsset()
+        {
+            var asset = base.LoadAsset();
+
+            // Clone the surface as well
+            string sourcePath = JsonSurface.GetSurfacePath(_item.Path);
+            if (Editor.ContentDatabase.Find(sourcePath) != null)
+            {
+                string destinationPath = JsonSurface.GetSurfacePath(asset);
+
+                Editor.ContentEditing.CloneAssetFile(destinationPath, sourcePath, Guid.NewGuid());
+            }
+            return asset;
         }
 
         /// <inheritdoc />
         protected override void UnlinkItem()
         {
             _properties.OnClean();
-            _preview.Emitter = null;
+            _preview.Asset = null;
             _isWaitingForSurfaceLoad = false;
 
             base.UnlinkItem();
@@ -384,29 +395,29 @@ namespace FlaxEditor.Windows.Assets
         /// <inheritdoc />
         protected override void OnAssetLinked()
         {
-            _preview.Emitter = _asset;
+            _preview.Asset = _asset;
             _isWaitingForSurfaceLoad = true;
 
             base.OnAssetLinked();
         }
 
         /// <inheritdoc />
-        public string SurfaceName => "Particle Emitter";
+        public string SurfaceName => "Number Graph";
 
         /// <inheritdoc />
         public byte[] SurfaceData
         {
-            get => _asset.LoadSurface(true);
+            get => JsonSurface.LoadSurface(_asset, true);
             set
             {
                 // Save data to the temporary asset
-                if (_asset.SaveSurface(value))
+                if (JsonSurface.SaveSurface(_asset, value))
                 {
                     // Error
                     _surface.MarkAsEdited();
-                    Editor.LogError("Failed to save Particle Emitter surface data");
+                    Editor.LogError("Failed to save surface data");
                 }
-                _preview.PreviewActor.ResetSimulation();
+                //_preview.PreviewActor.ResetSimulation();
             }
         }
 
@@ -425,11 +436,12 @@ namespace FlaxEditor.Windows.Assets
                 _properties.OnLoad(this);
 
                 // Load surface data from the asset
-                byte[] data = _asset.LoadSurface(true);
+                byte[] data = JsonSurface.LoadSurface(_asset, true);
+
                 if (data == null)
                 {
                     // Error
-                    Editor.LogError("Failed to load Particle Emitter surface data.");
+                    Editor.LogError("Failed to load surface data.");
                     Close();
                     return;
                 }
@@ -438,7 +450,7 @@ namespace FlaxEditor.Windows.Assets
                 if (_surface.Load(data))
                 {
                     // Error
-                    Editor.LogError("Failed to load Particle Emitter surface.");
+                    Editor.LogError("Failed to load surface.");
                     Close();
                     return;
                 }

@@ -26,7 +26,7 @@ namespace FlaxEditor.Windows.Assets
     /// <seealso cref="AnimationGraph" />
     /// <seealso cref="FlaxEditor.Windows.Assets.AssetEditorWindow" />
     /// <seealso cref="FlaxEditor.Surface.IVisjectSurfaceOwner" />
-    public sealed class AnimationGraphWindow : ClonedAssetEditorWindowBase<AnimationGraph>, IVisjectSurfaceOwner
+    public sealed class AnimationGraphWindow : VisjectWindowBase<AnimationGraph, AnimGraphSurface>, IVisjectSurfaceOwner
     {
         internal static Guid BaseModelId = new Guid(1000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
@@ -379,22 +379,12 @@ namespace FlaxEditor.Windows.Assets
             }
         }
 
-        private readonly SplitPanel _split1;
-        private readonly SplitPanel _split2;
         private readonly Preview _preview;
-        private readonly AnimGraphSurface _surface;
         private readonly NavigationBar _navigationBar;
 
-        private readonly ToolStripButton _saveButton;
         private readonly PropertiesProxy _properties;
         private bool _isWaitingForSurfaceLoad;
-        private bool _tmpAssetIsDirty;
         internal bool _paramValueChange;
-
-        /// <summary>
-        /// Gets the graph surface.
-        /// </summary>
-        public AnimGraphSurface Surface => _surface;
 
         /// <summary>
         /// Gets the animated model actor used for the animation preview.
@@ -405,21 +395,6 @@ namespace FlaxEditor.Windows.Assets
         public AnimationGraphWindow(Editor editor, AssetItem item)
         : base(editor, item)
         {
-            // Split Panel 1
-            _split1 = new SplitPanel(Orientation.Horizontal, ScrollBars.None, ScrollBars.None)
-            {
-                DockStyle = DockStyle.Fill,
-                SplitterValue = 0.7f,
-                Parent = this
-            };
-
-            // Split Panel 2
-            _split2 = new SplitPanel(Orientation.Vertical, ScrollBars.None, ScrollBars.Vertical)
-            {
-                DockStyle = DockStyle.Fill,
-                SplitterValue = 0.4f,
-                Parent = _split1.Panel2
-            };
 
             // Animation preview
             _preview = new Preview(this)
@@ -443,12 +418,11 @@ namespace FlaxEditor.Windows.Assets
                 Parent = _split1.Panel1,
                 Enabled = false
             };
-            _surface.ContextChanged += OnSurfaceContextChanged;
+            Surface.ContextChanged += OnSurfaceContextChanged;
 
             // Toolstrip
-            _saveButton = (ToolStripButton)_toolstrip.AddButton(Editor.Icons.Save32, Save).LinkTooltip("Save asset to the file");
             _toolstrip.AddSeparator();
-            _toolstrip.AddButton(editor.Icons.PageScale32, _surface.ShowWholeGraph).LinkTooltip("Show the whole graph");
+            _toolstrip.AddButton(editor.Icons.PageScale32, Surface.ShowWholeGraph).LinkTooltip("Show the whole graph");
             _toolstrip.AddButton(editor.Icons.Bone32, () => _preview.ShowBones = !_preview.ShowBones).SetAutoCheck(true).LinkTooltip("Show animated model bones debug view");
             _toolstrip.AddSeparator();
             _toolstrip.AddButton(editor.Icons.Docs32, () => Application.StartProcess(Utilities.Constants.DocsUrl + "manual/animation/anim-graph/index.html")).LinkTooltip("See documentation to learn more");
@@ -462,20 +436,20 @@ namespace FlaxEditor.Windows.Assets
 
         private void OnGraphPropertyEdited()
         {
-            _surface.MarkAsEdited(!_paramValueChange);
+            Surface.MarkAsEdited(!_paramValueChange);
             _paramValueChange = false;
         }
 
         private void OnSurfaceContextChanged(VisjectSurfaceContext context)
         {
-            _surface.UpdateNavigationBar(_navigationBar, _toolstrip);
+            Surface.UpdateNavigationBar(_navigationBar, _toolstrip);
         }
 
         /// <summary>
         /// Refreshes temporary asset to see changes live when editing the surface.
         /// </summary>
         /// <returns>True if cannot refresh it, otherwise false.</returns>
-        public bool RefreshTempAsset()
+        public override bool RefreshTempAsset()
         {
             // Ensure that asset is loaded
             if (_asset == null || !_asset.IsLoaded)
@@ -487,13 +461,13 @@ namespace FlaxEditor.Windows.Assets
                 return true;
 
             // Check if surface has been edited
-            if (_surface.IsEdited)
+            if (Surface.IsEdited)
             {
                 // Sync edited parameters
                 _properties.OnSave(this);
 
                 // Save surface (will call SurfaceData setter)
-                _surface.Save();
+                Surface.Save();
             }
 
             return false;
@@ -506,7 +480,7 @@ namespace FlaxEditor.Windows.Assets
         {
             get
             {
-                var mainNode = _surface.FindNode(8, 1) as Surface.Archetypes.Animation.Output;
+                var mainNode = Surface.FindNode(8, 1) as Surface.Archetypes.Animation.Output;
                 if (mainNode == null)
                 {
                     // Error
@@ -514,58 +488,6 @@ namespace FlaxEditor.Windows.Assets
                 }
                 return mainNode;
             }
-        }
-
-        /// <summary>
-        /// Scrolls the view to the main graph node.
-        /// </summary>
-        public void ScrollViewToMain()
-        {
-            // Find main node
-            var mainNode = MainNode;
-            if (mainNode == null)
-                return;
-
-            // Change scale and position
-            _surface.ViewScale = 0.5f;
-            _surface.ViewCenterPosition = mainNode.Center;
-        }
-
-        /// <inheritdoc />
-        public override void Save()
-        {
-            // Check if don't need to push any new changes to the original asset
-            if (!IsEdited)
-                return;
-
-            // Just in case refresh data
-            if (RefreshTempAsset())
-            {
-                // Error
-                return;
-            }
-
-            // Update original asset so user can see changes in the scene
-            if (SaveToOriginal())
-            {
-                // Error
-                return;
-            }
-
-            // Clear flag
-            ClearEditedFlag();
-
-            // Update
-            OnSurfaceEditedChanged();
-            _item.RefreshThumbnail();
-        }
-
-        /// <inheritdoc />
-        protected override void UpdateToolstrip()
-        {
-            _saveButton.Enabled = IsEdited;
-
-            base.UpdateToolstrip();
         }
 
         /// <inheritdoc />
@@ -608,7 +530,7 @@ namespace FlaxEditor.Windows.Assets
                 if (_asset.SaveSurface(value))
                 {
                     // Error
-                    _surface.MarkAsEdited();
+                    Surface.MarkAsEdited();
                     Editor.LogError("Failed to save animation graph surface data");
                     return;
                 }
@@ -619,44 +541,9 @@ namespace FlaxEditor.Windows.Assets
         }
 
         /// <inheritdoc />
-        public void OnContextCreated(VisjectSurfaceContext context)
-        {
-        }
-
-        /// <inheritdoc />
-        public void OnSurfaceEditedChanged()
-        {
-            if (_surface.IsEdited)
-                MarkAsEdited();
-        }
-
-        /// <inheritdoc />
-        public void OnSurfaceGraphEdited()
-        {
-            // Mark as dirty
-            _tmpAssetIsDirty = true;
-        }
-
-        /// <inheritdoc />
-        public void OnSurfaceClose()
-        {
-            Close();
-        }
-
-        /// <inheritdoc />
         public override void Update(float deltaTime)
         {
             base.Update(deltaTime);
-
-            // Check if temporary asset need to be updated
-            if (_tmpAssetIsDirty)
-            {
-                // Clear flag
-                _tmpAssetIsDirty = false;
-
-                // Update
-                RefreshTempAsset();
-            }
 
             // Check if need to load surface
             if (_isWaitingForSurfaceLoad && _asset.IsLoaded)
@@ -675,7 +562,7 @@ namespace FlaxEditor.Windows.Assets
                 }
 
                 // Load surface graph
-                if (_surface.Load(data))
+                if (Surface.Load(data))
                 {
                     // Error
                     Editor.LogError("Failed to load animation graph surface.");
@@ -687,8 +574,8 @@ namespace FlaxEditor.Windows.Assets
                 _properties.OnLoad(this);
 
                 // Setup
-                _surface.UpdateNavigationBar(_navigationBar, _toolstrip);
-                _surface.Enabled = true;
+                Surface.UpdateNavigationBar(_navigationBar, _toolstrip);
+                Surface.Enabled = true;
                 ClearEditedFlag();
             }
         }
@@ -699,34 +586,6 @@ namespace FlaxEditor.Windows.Assets
             base.PerformLayoutSelf();
 
             _navigationBar?.UpdateBounds(_toolstrip);
-        }
-
-        /// <inheritdoc />
-        public override bool UseLayoutData => true;
-
-        /// <inheritdoc />
-        public override void OnLayoutSerialize(XmlWriter writer)
-        {
-            writer.WriteAttributeString("Split1", _split1.SplitterValue.ToString());
-            writer.WriteAttributeString("Split2", _split2.SplitterValue.ToString());
-        }
-
-        /// <inheritdoc />
-        public override void OnLayoutDeserialize(XmlElement node)
-        {
-            float value1;
-
-            if (float.TryParse(node.GetAttribute("Split1"), out value1))
-                _split1.SplitterValue = value1;
-            if (float.TryParse(node.GetAttribute("Split2"), out value1))
-                _split2.SplitterValue = value1;
-        }
-
-        /// <inheritdoc />
-        public override void OnLayoutDeserialize()
-        {
-            _split1.SplitterValue = 0.7f;
-            _split2.SplitterValue = 0.4f;
         }
     }
 }

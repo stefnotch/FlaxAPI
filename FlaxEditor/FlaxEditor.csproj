@@ -70,6 +70,7 @@
     <Compile Include="Content\GUI\ContentView.cs" />
     <Compile Include="Content\GUI\ContentView.DragDrop.cs" />
     <Compile Include="Content\Import\Request.cs" />
+    <Compile Include="Content\Proxy\NumberGraphProxy.cs" />
     <Compile Include="Content\Proxy\ParticleEmitterProxy.cs" />
     <Compile Include="Content\Proxy\ParticleSystemProxy.cs" />
     <Compile Include="Content\Settings\LinuxPlatformSettings.cs" />
@@ -422,12 +423,14 @@
     <Compile Include="Surface\GUI\VisjectContextNavigationButton.cs" />
     <Compile Include="Surface\IParametersDependantNode.cs" />
     <Compile Include="Surface\IVisjectSurfaceOwner.cs" />
+    <Compile Include="Surface\JsonSurface.cs" />
     <Compile Include="Surface\MaterialSurface.cs" />
     <Compile Include="Surface\NodeArchetype.cs" />
     <Compile Include="Surface\NodeElementArchetype.cs" />
     <Compile Include="Surface\NodeElementType.cs" />
     <Compile Include="Surface\NodeFactory.cs" />
     <Compile Include="Surface\NodeFlags.cs" />
+    <Compile Include="Surface\NumberGraphSurface.cs" />
     <Compile Include="Surface\ParameterType.cs" />
     <Compile Include="Surface\ParticleEmitterSurface.cs" />
     <Compile Include="Surface\SurfaceComment.cs" />
@@ -533,6 +536,7 @@
     <Compile Include="Viewport\Previews\IESProfilePreview.cs" />
     <Compile Include="Viewport\Previews\MaterialPreview.cs" />
     <Compile Include="Viewport\Previews\ModelPreview.cs" />
+    <Compile Include="Viewport\Previews\NumberGraphPreview.cs" />
     <Compile Include="Viewport\Previews\ParticleEmitterPreview.cs" />
     <Compile Include="Viewport\Previews\ParticleSystemPreview.cs" />
     <Compile Include="Viewport\Previews\PrefabPreview.cs" />
@@ -553,6 +557,7 @@
     <Compile Include="Windows\Assets\MaterialInstanceWindow.cs" />
     <Compile Include="Windows\Assets\MaterialWindow.cs" />
     <Compile Include="Windows\Assets\ModelWindow.cs" />
+    <Compile Include="Windows\Assets\NumberGraphWindow.cs" />
     <Compile Include="Windows\Assets\ParticleEmitterWindow.cs" />
     <Compile Include="Windows\Assets\ParticleSystemWindow.cs" />
     <Compile Include="Windows\Assets\PrefabWindow.Actions.cs" />
@@ -564,6 +569,7 @@
     <Compile Include="Windows\Assets\SkinnedModelWindow.cs" />
     <Compile Include="Windows\Assets\SpriteAtlasWindow.cs" />
     <Compile Include="Windows\Assets\TextureWindow.cs" />
+    <Compile Include="Windows\Assets\VisjectWindowBase.cs" />
     <Compile Include="Windows\ContentWindow.ContextMenu.cs" />
     <Compile Include="Windows\ContentWindow.cs" />
     <Compile Include="Windows\ContentWindow.Navigation.cs" />
