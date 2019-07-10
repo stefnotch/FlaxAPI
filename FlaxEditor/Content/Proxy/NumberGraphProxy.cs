@@ -39,7 +39,7 @@ namespace FlaxEditor.Content
         /// <inheritdoc />
         public override void Create(string outputPath, object arg)
         {
-            Editor.SaveJsonAsset(outputPath, new NumberGraph());
+            Editor.SaveJsonAsset(outputPath, NumberGraph.New());
         }
     }
 }

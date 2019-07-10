@@ -162,6 +162,7 @@
     <Compile Include="API\Joints\SphericalJoint.cs" />
     <Compile Include="API\Joints\SphericalJoint.Gen.cs" />
     <Compile Include="API\JsonAssets\NumberGraph.cs" />
+    <Compile Include="API\JsonAssets\NumberGraphDefinition.cs" />
     <Compile Include="API\Lights\LightWithShadow.cs" />
     <Compile Include="API\Lights\LightWithShadow.Gen.cs" />
     <Compile Include="API\Lights\SkyLight.cs" />

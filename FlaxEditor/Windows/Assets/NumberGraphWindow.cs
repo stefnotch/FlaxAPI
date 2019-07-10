@@ -230,18 +230,18 @@ namespace FlaxEditor.Windows.Assets
         : base(editor, item)
         {
 
-            // ParticleEmitter preview6
+            // preview
             _preview = new NumberGraphPreview(true)
             {
                 Parent = _split2.Panel1
             };
 
-            // ParticleEmitter properties editor
+            // properties editor
             var propertiesEditor = new CustomEditorPresenter(null);
             propertiesEditor.Panel.Parent = _split2.Panel2;
             _properties = new PropertiesProxy();
             propertiesEditor.Select(_properties);
-            propertiesEditor.Modified += OnParticleEmitterPropertyEdited;
+            propertiesEditor.Modified += OnPropertyEdited;
             _propertiesEditor = propertiesEditor;
 
             // Surface
@@ -256,10 +256,10 @@ namespace FlaxEditor.Windows.Assets
             _toolstrip.AddButton(editor.Icons.PageScale32, _surface.ShowWholeGraph).LinkTooltip("Show whole graph");
             _toolstrip.AddSeparator();
             _toolstrip.AddButton(editor.Icons.BracketsSlash32, () => ShowSourceCode(_asset)).LinkTooltip("Show generated shader source code");
-            _toolstrip.AddButton(editor.Icons.Docs32, () => Application.StartProcess(Utilities.Constants.DocsUrl + "manual/particles/index.html")).LinkTooltip("See documentation to learn more");
+            //_toolstrip.AddButton(editor.Icons.Docs32, () => Application.StartProcess(Utilities.Constants.DocsUrl + "manual/particles/index.html")).LinkTooltip("See documentation to learn more");
         }
 
-        private void OnParticleEmitterPropertyEdited()
+        private void OnPropertyEdited()
         {
             _surface.MarkAsEdited();
         }
@@ -316,6 +316,8 @@ namespace FlaxEditor.Windows.Assets
             {
                 _surface.Save();
             }
+
+            _preview.RefreshAsset();
 
             return false;
         }
@@ -410,6 +412,14 @@ namespace FlaxEditor.Windows.Assets
             get => JsonSurface.LoadSurface(_asset, true);
             set
             {
+                // Compile the surface
+                if (_surface != null)
+                {
+                    var graphInstance = _asset.CreateInstance<NumberGraph>();
+                    graphInstance.NumberGraphDefinition = _surface.CompileToGraphDefinition();
+                    Editor.SaveJsonAsset(_asset.Path, graphInstance);
+                }
+
                 // Save data to the temporary asset
                 if (JsonSurface.SaveSurface(_asset, value))
                 {
@@ -417,6 +427,7 @@ namespace FlaxEditor.Windows.Assets
                     _surface.MarkAsEdited();
                     Editor.LogError("Failed to save surface data");
                 }
+
                 //_preview.PreviewActor.ResetSimulation();
             }
         }
